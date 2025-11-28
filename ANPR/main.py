@@ -1,8 +1,8 @@
 import cv2
 from ultralytics import YOLO
 from paddleocr import PaddleOCR
-from main import process_frame
-from client_update import send_plate_to_web
+from utils.procesamiento import process_frame
+from utils.client_update import send_plate_to_web
 
 cap = cv2.VideoCapture(0)
 model = YOLO("best.pt")
