@@ -16,7 +16,7 @@ def process_frame(frame, model, ocr):
                 x1, y1 = int(xyxy[0]), int(xyxy[1])
                 x2, y2 = int(xyxy[2]), int(xyxy[3])
 
-                plate_image = image[y1-15:y2+15, x1-15:x2+15]
+                plate_image = frame[y1-15:y2+15, x1-15:x2+15]
 
                 try:
                     result_ocr = ocr.predict(cv2.cvtColor(plate_image, cv2.COLOR_BGR2RGB))
@@ -33,8 +33,8 @@ def process_frame(frame, model, ocr):
                 except:
                     placa_limpia = ""
 
-                cv2.rectangle(image, (x1-10, y1-35), (x2+10, y2-(y2-y1)), (0, 255, 0), -1)
-                cv2.rectangle(image, (x1,y1), (x2,y2), (0,255,0), 2)
-                cv2.putText(image, placa_limpia, (x1-7, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,0,0), 2)
+                cv2.rectangle(frame, (x1-10, y1-35), (x2+10, y2-(y2-y1)), (0, 255, 0), -1)
+                cv2.rectangle(frame, (x1,y1), (x2,y2), (0,255,0), 2)
+                cv2.putText(frame, placa_limpia, (x1-7, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,0,0), 2)
 
     return placa_limpia, frame
