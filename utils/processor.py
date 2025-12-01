@@ -14,8 +14,7 @@ def is_inside_roi(bbox, rois, frame_shape):
 
 
 def process_frame(frame, model, ocr, rois):
-    placa_limpia = None
-    bbox = None
+    detecciones = []
     results = model(frame)
 
     for result in results:
@@ -47,7 +46,8 @@ def process_frame(frame, model, ocr, rois):
                     whitelist_pattern = re.compile(r'^[A-Z0-9]+$')
                     left_to_right = ''.join([t for _, t in left_to_right])
                     output_text = ''.join([t for t in left_to_right if whitelist_pattern.fullmatch(t) ])
-                    placa_limpia = output_text[:6]
+                    placa_limpia = output_text[:6] if output_text else "???-???"
+                    detecciones.append((placa_limpia, bbox, slot_detectado))
 
                     cv2.rectangle(frame, (x1-10, y1-35), (x2+10, y2-(y2-y1)), (0, 255, 0), -1)
                     cv2.rectangle(frame, (x1,y1), (x2,y2), (0,255,0), 2)
@@ -56,6 +56,6 @@ def process_frame(frame, model, ocr, rois):
                 except:
                     placa_limpia = ""
 
-                    return placa_limpia, frame, bbox
+                    detecciones.append((placa_limpia, bbox, slot_detectado))
 
-    return placa_limpia, frame, bbox
+    return detecciones, frame

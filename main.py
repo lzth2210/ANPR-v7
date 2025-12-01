@@ -46,17 +46,16 @@ while True:
     if not ret:
         break
 
-    placa, frame_out, bbox = process_frame(frame, model, ocr, ROIS)  
+    detecciones, frame_out = process_frame(frame, model, ocr, ROIS)  
     # 👆 Asegúrate que process_frame devuelva también el bbox de la placa detectada
 
     # Dibujar las ROI en el frame
     draw_rois(frame_out, ROIS)
 
-    if placa and bbox:
-        slot_detectado = is_inside_roi(bbox, ROIS, frame.shape)
+    for placa, bbox, slot_detectado in detecciones:
         if slot_detectado:
-            print(f"Placa detectada: {placa} en {slot_detectado}")
-            send_plate_to_web(placa)  # luego aquí añadimos el slot
+            print('Detecciones de este frame: ', detecciones)
+            send_plate_to_web(placa, slot_detectado)
 
     cv2.imshow("ANPR", frame_out)
 
