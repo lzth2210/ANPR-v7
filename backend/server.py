@@ -1,15 +1,13 @@
 # server.py
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import threading
 import time
 from models import db, PlateRecord
 
 app = Flask(__name__)
 CORS(app)
 
-# Variable compartida (thread-safe suficiente para este caso simple)
-
+# Configuración de la base de datos
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///plates.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -17,6 +15,7 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
+
 
 @app.route("/update_plate", methods=["POST"])
 def update_plate():
@@ -28,31 +27,66 @@ def update_plate():
         return jsonify({"success": False, "error": "no plate"}), 400
 
     # 🔹 Lógica: solo aceptar si el slot es "entrada"
-    if slot != "entrada":
-        return jsonify({"success": False, "error": "slot not allowed"}), 200
+    if slot == "entrada":
+        # Evitar duplicado consecutivo en entrada
+        last_record = PlateRecord.query.filter_by(
+            plate=plate, slot="entrada"
+        ).order_by(PlateRecord.id.desc()).first()
 
-    # 🔹 Evitar duplicados consecutivos en entrada
-    last_record = PlateRecord.query.filter_by(plate=plate, slot=slot).order_by(PlateRecord.id.desc()).first()
-    if last_record:
-        return jsonify({"success": False, "error": "duplicate"}), 200
+        if last_record:
+            return jsonify({"success": False, "error": "duplicate"}), 200
 
-    # 🔹 Insertar si pasa la lógica
-    record = PlateRecord(
+        record = PlateRecord(
+            plate=plate,
+            slot="entrada",
+            timestamp=int(time.time())
+        )
+        db.session.add(record)
+        db.session.commit()
+
+        return jsonify({"success": True})
+
+    last = PlateRecord.query.filter_by(plate=plate).order_by(PlateRecord.id.desc()).first()
+
+    # Si NO existe registro previo → ignorar
+    if not last:
+        return jsonify({"success": False, "error": "no previous entry"}), 200
+
+    # Si el último registro NO fue entrada → ignorar
+    if last.slot != "entrada":
+        return jsonify({"success": False, "error": "not from entrada"}), 200
+
+    # Si el nuevo slot es igual al actual → ignorar
+    if last.slot == slot:
+        return jsonify({"success": False, "error": "same slot"}), 200
+
+    # Registrar el nuevo slot
+    new_record = PlateRecord(
         plate=plate,
         slot=slot,
         timestamp=int(time.time())
     )
-    db.session.add(record)
+    db.session.add(new_record)
     db.session.commit()
 
-    return jsonify({"success": True})
+    return jsonify({"success": True, "info": "slot updated"})
+
 
 @app.route("/latest", methods=["GET"])
 def latest():
     record = PlateRecord.query.order_by(PlateRecord.id.desc()).first()
-    if record:
-        return jsonify({"plate": None, "slot": None, "timestamp": 0})
-    return jsonify(record.to_dict())
+    if not record:
+        return jsonify({
+            "plate": None,
+            "slot": None,
+            "timestamp": 0
+        })
+    return jsonify({
+        "plate": record.plate,
+        "slot": record.slot,
+        "timestamp": record.timestamp
+    })
+
 
 @app.route("/tabla", methods=["GET"])
 def tabla():
