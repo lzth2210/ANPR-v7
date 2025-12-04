@@ -1,6 +1,15 @@
 from flask_sqlalchemy import SQLAlchemy
+import serial
+import time
 
 db = SQLAlchemy()
+
+# Inicializar puerto serial global
+ser = serial.Serial('COM8', 9600, timeout=1)
+time.sleep(2)
+# Inicializar servo en estado R (reposo/cerrado)
+ser.write(b'R')
+time.sleep(1)
 
 class PlateRecord(db.Model):
     __tablename__ = "plates"

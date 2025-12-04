@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, PlateRecord
+from models import db, PlateRecord, ser
 import time
 
 factura_bp = Blueprint('factura', __name__)
@@ -27,6 +27,28 @@ def factura():
     )
     db.session.add(record)
     db.session.commit()
+
+    # Controlar hardware: abrir barrera y apagar LED del slot
+    ser.write(b'V')  # Abrir barrera
+    time.sleep(4)
+    ser.write(b'R')  # Cerrar barrera
+
+    # Buscar en qué slot estaba el vehículo antes de pagar
+    slot_record = PlateRecord.query.filter_by(plate=plate).filter(
+        PlateRecord.slot.like('slot%')
+    ).order_by(PlateRecord.id.desc()).first()
+
+    if slot_record and slot_record.slot.startswith("slot"):
+        slot_number = slot_record.slot[-1]  # ej: "slot3" → "3"
+        command_map = {
+            "1": b'G',
+            "2": b'H',
+            "3": b'I',
+            "4": b'J',
+            "5": b'K',
+            "6": b'L'
+        }
+        ser.write(command_map[slot_number])  # Apagar LED del slot
 
     # Calcular tiempo de permanencia
     tiempo_total = int(time.time()) - ts_entrada

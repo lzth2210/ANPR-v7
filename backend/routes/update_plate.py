@@ -1,13 +1,6 @@
 from flask import Blueprint, request, jsonify
-from models import db, PlateRecord
+from models import db, PlateRecord, ser
 import time
-import serial
-
-ser = serial.Serial('COM8', 9600, timeout=1)
-time.sleep(2)
-# Inicializar servo en estado R (reposo/cerrado)
-ser.write(b'R')
-time.sleep(1)
 
 plates_bp = Blueprint('plates', __name__)
 
@@ -132,5 +125,3 @@ def update_plate():
             ser.write(command_map[slot_number])
 
     return jsonify({"success": True, "info": "slot updated"}), 200
-    
-
