@@ -19,7 +19,7 @@ def factura():
     entrada = PlateRecord.query.filter_by(plate=plate, slot="entrada").order_by(PlateRecord.id.asc()).first()
     ts_entrada = entrada.timestamp if entrada else int(time.time())
 
-    # Registrar salida como "pagado"
+    # Registrar pago como "pagado"
     record = PlateRecord(
         plate=plate,
         slot="pagado",

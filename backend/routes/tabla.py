@@ -42,7 +42,7 @@ def tabla():
         for r in records:
             hora = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(r.timestamp))
             html += f"<tr><td>{r.id}</td><td>{r.plate}</td><td>{r.slot}</td><td>{hora}</td>"
-            if r.slot != "salida":
+            if r.slot != "pagado":
                 html += f"<td><a href='/factura?plate={r.plate}'>Facturar</a></td></tr>"
             else:
                 html += "<td>Ya facturado</td></tr>"

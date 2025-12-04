@@ -5,8 +5,27 @@ import serial
 
 ser = serial.Serial('COM8', 9600, timeout=1)
 time.sleep(2)
+# Inicializar servo en estado R (reposo/cerrado)
+ser.write(b'R')
+time.sleep(1)
 
 plates_bp = Blueprint('plates', __name__)
+
+def is_valid_plate(plate):
+    """
+    Valida que una placa sea válida:
+    - No sea '???-???'
+    - Tenga exactamente 6 caracteres
+    """
+    if not plate:
+        return False
+    # Filtrar placas inválidas
+    if plate == "???-???" or plate == "???":
+        return False
+    # Debe tener exactamente 6 caracteres
+    if len(plate) != 6:
+        return False
+    return True
 
 @plates_bp.route('/update_plate', methods=['POST'])
 def update_plate():
@@ -14,9 +33,9 @@ def update_plate():
     plate = data.get("plate")
     slot = data.get("slot")
 
-    if not plate:
+    if not plate or not is_valid_plate(plate):
         ser.write(b'R')
-        return jsonify({"success": False, "error": "no plate"}), 400
+        return jsonify({"success": False, "error": "no plate o placa inválida"}), 400
 
     # -----------------------
     # 1) ENTRADA -> registrar
@@ -98,9 +117,10 @@ def update_plate():
         time.sleep(4)
         ser.write(b'R')
 
-        last_record = PlateRecord.query.filter_by(plate=plate).order_by(PlateRecord.id.desc()).first()
-        if last_record and last_record.slot.startswith("slot"):
-            slot_number = last_record.slot[-1]  # ej: "slot3" → "3"
+        # Buscar el registro anterior (antes de crear el de "pagado")
+        # que contiene el slot donde estaba el vehículo
+        if last and last.slot.startswith("slot"):
+            slot_number = last.slot[-1]  # ej: "slot3" → "3"
             command_map = {
                 "1": b'G',
                 "2": b'H',
