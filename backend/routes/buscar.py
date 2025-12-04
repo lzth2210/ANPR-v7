@@ -7,21 +7,83 @@ buscar_bp = Blueprint('buscar', __name__)
 @buscar_bp.route('/buscar', methods=['GET'])
 def buscar():
     html = """
-    <html>
+    <!DOCTYPE html>
+    <html lang="es">
     <head>
+        <meta charset="UTF-8" />
         <title>Buscar Placa</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>
-            body {font-family: Arial; text-align: center; margin-top: 50px;}
-            input {padding: 10px; width: 300px;}
-            ul {list-style: none; padding: 0; margin: 0; width: 300px; margin: auto;}
-            li {padding: 8px; border: 1px solid #ccc; cursor: pointer;}
-            li:hover {background: #eee;}
+            body {
+                margin: 0;
+                font-family: 'Segoe UI', Roboto, sans-serif;
+                background: #f3f4f6;
+                color: #111827;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                min-height: 100vh;
+            }
+            .header {
+                background-color: #3b82f6;
+                color: white;
+                width: 100%;
+                padding: 20px 0;
+                font-size: 24px;
+                font-weight: bold;
+                text-align: center;
+            }
+            .content {
+                margin-top: 60px;
+                text-align: center;
+            }
+            .content h2 {
+                font-size: 32px;
+                margin-bottom: 12px;
+                color: #235284;
+            }
+            .content p {
+                font-size: 18px;
+                color: #374151;
+                margin-bottom: 24px;
+            }
+            input[type="text"] {
+                padding: 12px;
+                width: 320px;
+                font-size: 16px;
+                border: 2px solid #3b82f6;
+                border-radius: 8px;
+                outline: none;
+            }
+            ul {
+                list-style: none;
+                padding: 0;
+                margin-top: 20px;
+                width: 320px;
+            }
+            li {
+                padding: 10px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                margin-bottom: 8px;
+                background: white;
+                cursor: pointer;
+                transition: background 0.2s ease;
+            }
+            li:hover {
+                background: #e0f2fe;
+            }
         </style>
     </head>
     <body>
-        <h2>Buscar Placa</h2>
-        <input type="text" id="search" placeholder="Escribe la placa...">
-        <ul id="suggestions"></ul>
+        <div class="header">BUSQUEDA</div>
+        <div class="content">
+            <h2>¡Bienvenido!</h2>
+            <p>Busque su placa a continuación:</p>
+            <input type="text" id="search" placeholder="EJ: ABC123" />
+            <ul id="suggestions"></ul>
+        </div>
 
         <script>
             const input = document.getElementById("search");

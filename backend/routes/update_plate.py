@@ -1,6 +1,10 @@
 from flask import Blueprint, request, jsonify
 from models import db, PlateRecord
 import time
+import serial
+
+ser = serial.Serial('COM8', 9600, timeout=1)
+time.sleep(2)
 
 plates_bp = Blueprint('plates', __name__)
 
@@ -11,12 +15,16 @@ def update_plate():
     slot = data.get("slot")
 
     if not plate:
+        ser.write(b'R')
         return jsonify({"success": False, "error": "no plate"}), 400
 
     # -----------------------
     # 1) ENTRADA -> registrar
     # -----------------------
     if slot == "entrada":
+        ser.write(b'V')
+        time.sleep(4)
+        ser.write(b'R')
 
         last_record = PlateRecord.query.filter_by(plate=plate).order_by(PlateRecord.id.desc()).first()
 
@@ -71,5 +79,38 @@ def update_plate():
     db.session.add(new_record)
     db.session.commit()
 
+    if slot.startswith("slot"):
+    # slot viene como "slot1", "slot2", etc.
+    
+        slot_number = slot[-1]  # toma el último carácter
+        command_map = {
+            "1": b'A',
+            "2": b'B',
+            "3": b'C',
+            "4": b'D',
+            "5": b'E',
+            "6": b'F'
+        }
+        ser.write(command_map[slot_number])
+
+    if slot == "pagado":
+        ser.write(b'V')
+        time.sleep(4)
+        ser.write(b'R')
+
+        last_record = PlateRecord.query.filter_by(plate=plate).order_by(PlateRecord.id.desc()).first()
+        if last_record and last_record.slot.startswith("slot"):
+            slot_number = last_record.slot[-1]  # ej: "slot3" → "3"
+            command_map = {
+                "1": b'G',
+                "2": b'H',
+                "3": b'I',
+                "4": b'J',
+                "5": b'K',
+                "6": b'L'
+            }
+            ser.write(command_map[slot_number])
+
     return jsonify({"success": True, "info": "slot updated"}), 200
+    
 
